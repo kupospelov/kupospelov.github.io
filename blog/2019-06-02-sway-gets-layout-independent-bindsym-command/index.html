@@ -1,50 +1,43 @@
-<!DOCTYPE html>
-<html>
+<!doctype html><html>
 <head>
-  <meta charset="utf-8">
-<meta name="viewport" content="width=device-width">
-<title>Sway gets layout-independent bindsym command</title>
-<link rel="stylesheet" href="/style.css" type="text/css" media="all" />
-<link rel="alternate" href="/rss.xml" type="application/rss+xml" title="RSS" />
-<link rel="icon" type="image/jpg" href="/img/me.jpg" />
-
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width">
+<title>Sway gets layout-independent bindsym command - Konstantin Pospelov</title>
+<link rel=stylesheet href=/style.css type=text/css media=all>
+<link rel=icon type=image/jpg href=/img/me.jpg>
 </head>
-<body data-route=blog>
-  <nav class="menu">
-  <a class="menu-item current" href="/">blog</a>
-  <a class="menu-item " href="/about">about</a>
-  <hr>
+<body>
+<nav class=menu>
+<a class=menu-item href=/>about</a>
+<a class="menu-item current" href=/blog>blog</a>
+<hr>
 </nav>
-
-  <main>
-    <article>
-      <time pubdate="pubdate">2019-06-02</time>
-      <h1>Sway gets layout-independent bindsym command</h1>
-      <p>The default behavior of the <code>bindsym</code> command in Sway is a major pain point for users with several configured keyboard layouts. The command literally binds actions to keysyms, which means that your shortcuts constantly change their position or may not work at all.</p>
+<main>
+<article>
+<time pubdate=pubdate>June 2, 2019</time>
+<h1>Sway gets layout-independent bindsym command</h1>
+<p>The default behavior of the <code>bindsym</code> command in Sway is a major pain point for users with several configured keyboard layouts. The command literally binds actions to keysyms, which means that your shortcuts constantly change their position or may not work at all.</p>
 <p>What makes it look even more weird is that in i3 <code>bindsym</code> <em>does</em> work consistently in any layout, because i3 simply translates the specified keysyms into keycodes. You can even specify which layout should be used for the translation using <code>Group[1-4]</code>.</p>
 <p>The topic of input processing is far more complex than I could imagine, mostly because different people have <em>very</em> different opinions about how it should be implemented. The very idea to change the meaning of the <code>bindsym</code> command triggered a lot of back-and-forth discussion with quite a few people involved.</p>
-<p>The process took some time, but in the end we finally got a solution that should work for everyone. With the new <code>--to-code</code> flag, the behavior of Sway's <code>bindsym</code> becomes roughly equivalent to that of i3. This is not as tedious as you might think, because you can specify the flag only once per block of bindings:</p>
-<pre><code>bindsym --to-code {
+<p>The process took some time, but in the end we finally got a solution that should work for everyone. With the new <code>--to-code</code> flag, the behavior of Sway&rsquo;s <code>bindsym</code> becomes roughly equivalent to that of i3. This is not as tedious as you might think, because you can specify the flag only once per block of bindings:</p>
+<pre tabindex=0><code>bindsym --to-code {
     $mod+Return exec $term
     $mod+Shift+c reload
     # etc
 }
-</code></pre>
-<p>A few points regarding the current implementation:</p>
+</code></pre><p>A few points regarding the current implementation:</p>
 <ul>
 <li>The translation only uses the first configured layout. A change in the input configuration can trigger re-translation of the configured bindings.</li>
 <li>In case the translation fails, the binding will work as an ordinary <code>bindsym</code>, and a warning will be logged. We cannot fail the command in this case, because <code>input</code> and <code>bindsym</code> commands can be in any order (and cannot be sorted, in case of IPC), so the relevant input configuration may not be available yet.</li>
 <li>In case a keysym cannot be resolved into a single keycode, the translation will fail. This should not be a frequent use-case, so the complexity it introduces is not worth it at this point.</li>
 </ul>
 <p>The feature will appear in Sway 1.1, which is going to be released soon. You can also get an RC build and try it out now.</p>
-
-    </article>
-  </main>
-  <footer>
-  <hr>
-  <p>The content is licensed under <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</p>
-  <br>
+</article>
+</main>
+<footer>
+<hr>
+<p>The content is licensed under <a rel=license href=http://creativecommons.org/licenses/by/4.0/>CC BY 4.0</a>.</p>
+<br>
 </footer>
-
 </body>
 </html>
