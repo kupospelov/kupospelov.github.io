@@ -1,0 +1,71 @@
+<!doctype html><html>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width">
+<title>Accessing a machine behind NAT - Konstantin Pospelov</title>
+<link rel=stylesheet href=/style.css type=text/css media=all>
+<link rel=icon type=image/jpg href=/img/me.jpg>
+</head>
+<body>
+<nav class=menu>
+<a class=menu-item href=/>about</a>
+<a class="menu-item current" href=/blog>blog</a>
+<hr>
+</nav>
+<main>
+<article>
+<time pubdate=pubdate>Oct 31, 2021</time>
+<h1>Accessing a machine behind NAT</h1>
+<p>I have a remote machine that I have to occasionally maintain. There is no easy way to connect to it, since all available ISPs at that place can only offer IPv4 (which nowadays means NAT) and not IPv6.</p>
+<p>For this purpose I chose WireGuard, which is probably the simplest and fastest VPN solution available today. There is a great number of articles on this topic on the web. I mostly followed <a href=https://www.digitalocean.com/community/tutorials/how-to-set-up-wireguard-on-ubuntu-20-04>this one</a>, but used other available sources as well.</p>
+<h2 id=base-setup>Base setup</h2>
+<p>Generate private and public keys for each peer using <code>wg genkey</code> and <code>wg pubkey</code>:</p>
+<pre tabindex=0><code>wg genkey | tee private.key | wg pubkey &gt; public.key
+</code></pre><p>Configure <code>/etc/wireguard/wg0.conf</code> on the server. Well, in the WireGuard world all machines are just &ldquo;peers&rdquo;, however let&rsquo;s call the machine with a public IP a &ldquo;server&rdquo; for brevity. I use this as a template:</p>
+<pre tabindex=0><code>[Interface]
+PrivateKey = $PRIVATE_KEY # The server private key
+Address = 10.8.0.1
+ListenPort = $PORT
+SaveConfig = true
+</code></pre><p>Configure <code>/etc/wireguard/wg0.conf</code> on other peers that connect to our server. I use this as a template:</p>
+<pre tabindex=0><code>[Interface]
+PrivateKey = $PRIVATE_KEY # The current peer private key
+Address = 10.8.0.$NUMBER/24
+
+[Peer]
+PublicKey = $PUBLIC_KEY # The server public key
+AllowedIPs = 10.8.0.0/24
+PersistentKeepalive = 25
+Endpoint = $ADDRESS:$PORT
+</code></pre><p>Note that I set <a href=https://www.wireguard.com/quickstart/#nat-and-firewall-traversal-persistence>PersistentKeepalive</a>, without this settings you might not be able to access machines behind NAT after some time.</p>
+<p>Add a new <code>[Peer]</code> section to your server config:</p>
+<pre tabindex=0><code>[Peer]
+PublicKey = $PUBLIC_KEY # The public key of the new peer
+AllowedIPs = 10.8.0.$NUMBER/32
+</code></pre><p>That is it! You can bring up the interface using <code>wg-quick up wg0</code> on both ends. You can also use <code>wg-quick@wg0.service</code> to start the tunnel automatically using systemd.</p>
+<h2 id=forwarding>Forwarding</h2>
+<p>In order to allow the peers to communicate with each other we also need to enable packet forwarding.</p>
+<p>Set the following variables in <code>/etc/sysctl.conf</code>:</p>
+<pre tabindex=0><code>net.ipv4.ip_forward = 1
+</code></pre><p>Enable forwarding on wg0:</p>
+<pre tabindex=0><code>iptables -A FORWARD -i wg0 -o wg0 -j ACCEPT
+</code></pre><h2 id=masquerading-optional>Masquerading (optional)</h2>
+<p>If you also want to route external traffic through the server, enable packet forwarding and masquerading on the external interface:</p>
+<pre tabindex=0><code>iptables -A FORWARD -i wg0 -o $INTERFACE -j ACCEPT
+iptables -t nat -I POSTROUTING -o $INTERFACE -j MASQUERADE
+</code></pre><p>In this case also make sure to update <code>AllowedIPs</code> to <code>0.0.0.0/0</code> on the peers:</p>
+<pre tabindex=0><code>[Peer]
+PublicKey = $PUBLIC_KEY
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 25
+Endpoint = $ADDRESS:$PORT
+</code></pre><p>At this point you should have a working setup that allows peers to send packets to each other and (optionally) even route your external traffic through the server. Have fun using WireGuard!</p>
+</article>
+</main>
+<footer>
+<hr>
+<p>The content is licensed under <a rel=license href=http://creativecommons.org/licenses/by/4.0/>CC BY 4.0</a>.</p>
+<br>
+</footer>
+</body>
+</html>
