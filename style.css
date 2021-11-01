@@ -38,6 +38,7 @@ code {
 article > pre {
   background: #eee;
   padding: 1rem;
+  white-space: pre-wrap;
 }
 
 p > code {
