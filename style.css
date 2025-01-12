@@ -10,8 +10,9 @@ body {
   width: calc(100vw - 30px);
 }
 
-h1 {
-  font-size: 20px;
+h1, .title {
+  font-size: 18px;
+  margin: 0 0 0.67em 0;
 }
 
 h2 {
@@ -19,11 +20,15 @@ h2 {
 }
 
 h3 {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 a {
   color: #000;
+}
+
+.title > a {
+  text-decoration: none;
 }
 
 ul li {
