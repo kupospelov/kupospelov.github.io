@@ -14,14 +14,19 @@ body {
 
 #links {
   text-align: left;
-  max-width: 90%;
   white-space: pre-wrap;
   word-wrap: break-word;
   font-size: 18px;
+  width: 100%;
+}
+
+.link {
+  margin: 20px;
   padding: 20px;
+  background-color: #eee;
   border-radius: 10px;
 }
 
-#links:not(:empty) {
-  background-color: #eeeeee;
+.error {
+  background-color: #e99;
 }
